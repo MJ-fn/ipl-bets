@@ -256,7 +256,8 @@ const firebaseConfig = {
         statusHtml = `<div class="my-bet-pill" style="border-color:${TEAM_META[myBet.team]?.color||'#fff'}">🎯 Bet: ${myBet.team} — ${formatINR(myBet.amount)}</div>`;
       }
 
-      const canBet = !isPast && !result && !myBet;
+      const canBet    = !isPast && !result && !myBet;
+      const canChange = !isPast && !result && !!myBet;
 
       card.innerHTML = `
         <div class="match-meta">${fmtDate(m.date)} · ${m.time} IST · ${m.venue}</div>
@@ -266,19 +267,21 @@ const firebaseConfig = {
           <span class="team-badge" style="color:${meta2.color}">${m.team2}</span>
         </div>
         ${statusHtml}
-        ${canBet ? `
+        ${(canBet || canChange) ? `
         <div class="bet-form" id="bf-${m.id}">
           <div class="bet-team-choice">
-            <button class="bet-team-btn" id="bt-${m.id}-${m.team1}" onclick="selectBetTeam('${m.id}','${m.team1}','${m.team2}')" style="--tc:${meta1.color}">${m.team1}</button>
-            <button class="bet-team-btn" id="bt-${m.id}-${m.team2}" onclick="selectBetTeam('${m.id}','${m.team2}','${m.team1}')" style="--tc:${meta2.color}">${m.team2}</button>
+            <button class="bet-team-btn ${canChange && myBet.team===m.team1 ? 'selected' : ''}" id="bt-${m.id}-${m.team1}" onclick="selectBetTeam('${m.id}','${m.team1}','${m.team2}')" style="--tc:${meta1.color}">${m.team1}</button>
+            <button class="bet-team-btn ${canChange && myBet.team===m.team2 ? 'selected' : ''}" id="bt-${m.id}-${m.team2}" onclick="selectBetTeam('${m.id}','${m.team2}','${m.team1}')" style="--tc:${meta2.color}">${m.team2}</button>
           </div>
           <div class="bet-amount-row">
-            <input type="number" id="ba-${m.id}" placeholder="Amount (₹)" min="1" class="bet-input"/>
-            <button class="place-bet-btn" onclick="placeBet('${m.id}','${m.team1}','${m.team2}')">Place Bet</button>
+            <input type="number" id="ba-${m.id}" placeholder="Amount (₹)" min="1" class="bet-input" value="${canChange ? myBet.amount : ''}"/>
+            <button class="place-bet-btn ${canChange ? 'change-bet-btn' : ''}" onclick="placeBet('${m.id}','${m.team1}','${m.team2}')">${canChange ? 'Change Bet' : 'Place Bet'}</button>
           </div>
         </div>` : ""}
       `;
       ml.appendChild(card);
+      // Pre-select existing bet team so the button is ready to change
+      if(canChange){ selectedTeams[m.id] = myBet.team; }
     }
   }
 
@@ -306,8 +309,10 @@ const firebaseConfig = {
       toast("Bets closed for this match!", "error"); return;
     }
     try {
+      const existingSnap = await get(dbRef(`bets/${currentUid}/${mid}`));
+      const isChange = existingSnap.exists();
       await set(dbRef(`bets/${currentUid}/${mid}`), { team, amount, ts: Date.now() });
-      toast(`Bet placed: ${team} for ${formatINR(amount)} 🏏`, "success");
+      toast(isChange ? `Bet updated: ${team} for ${formatINR(amount)} 🔄` : `Bet placed: ${team} for ${formatINR(amount)} 🏏`, "success");
       renderMatches($("main-content"));
     } catch(e){ toast(e.message, "error"); }
   };
@@ -748,6 +753,8 @@ nav {
   white-space:nowrap; font-size:.88rem; transition: background .2s;
 }
 .place-bet-btn:hover { background: #B8540A; }
+.change-bet-btn { background: #2A5A8A !important; }
+.change-bet-btn:hover { background: #1E4570 !important; }
 
 /* ── LEADERBOARD ── */
 .lb-table { width:100%; border-collapse:collapse; }
