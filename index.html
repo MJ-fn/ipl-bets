@@ -238,7 +238,6 @@ const firebaseConfig = {
     const allBets = allBetsSnap.exists() ? allBetsSnap.val() : {};
     const users   = usersSnap.exists()   ? usersSnap.val()   : {};
 
-    // Split: upcoming = no result yet, completed = result declared
     const upcomingMatches  = MATCHES.filter(m => !results[m.id]);
     const completedMatches = [...MATCHES].reverse().filter(m => results[m.id]);
 
@@ -253,7 +252,6 @@ const firebaseConfig = {
       card.className = "match-card" + (isPast?" match-past":"") + (result?" match-done":"");
 
       const meta1 = TEAM_META[m.team1]; const meta2 = TEAM_META[m.team2];
-
       let statusHtml = "";
       if(result){
         const win = result.winner;
@@ -404,8 +402,10 @@ const firebaseConfig = {
     const results = resultsSnap.exists() ? resultsSnap.val() : {};
 
     // Compute P&L for each user
+    const HIDDEN_EMAILS = new Set(["digvijaymane23@gmail.com","mj.vgschool@gmail.com"]);
     const rows = [];
     for(const [uid, u] of Object.entries(users)){
+      if(HIDDEN_EMAILS.has(u.email)) continue;
       let profit = 0, wins = 0, losses = 0, pending = 0;
       const myBets = allBets[uid] || {};
       for(const [mid, bet] of Object.entries(myBets)){
@@ -945,29 +945,18 @@ nav {
   font-weight:700; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:.35rem;
 }
 .m-tab.active { background:var(--surface); color:var(--text); box-shadow:0 1px 6px rgba(0,0,0,.15); }
-.m-tab-ct {
-  background:var(--border); color:var(--text2); font-size:.68rem;
-  padding:.08rem .38rem; border-radius:7px; font-weight:700;
-}
+.m-tab-ct { background:var(--border); color:var(--text2); font-size:.68rem; padding:.08rem .38rem; border-radius:7px; font-weight:700; }
 .m-tab.active .m-tab-ct { background:var(--accent-soft); color:var(--accent); }
 
 /* ── SQUAD BETS PANEL ── */
-.squad-panel {
-  margin-top:.6rem; border-top:1px solid var(--border); padding-top:.55rem;
-}
-.squad-label {
-  font-size:.65rem; font-weight:700; text-transform:uppercase;
-  letter-spacing:.7px; color:var(--muted); margin-bottom:.4rem;
-}
+.squad-panel { margin-top:.6rem; border-top:1px solid var(--border); padding-top:.55rem; }
+.squad-label { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); margin-bottom:.4rem; }
 .squad-cols { display:flex; }
 .squad-col  { flex:1; display:flex; flex-direction:column; gap:.22rem; }
 .squad-right { align-items:flex-end; }
 .squad-team { font-family:var(--font-display); font-size:.85rem; font-weight:700; margin-bottom:.18rem; }
 .squad-div  { width:1px; background:var(--border); margin:0 .5rem; }
-.sq-row {
-  display:flex; align-items:center; gap:.35rem;
-  padding:.15rem .3rem; border-radius:5px;
-}
+.sq-row { display:flex; align-items:center; gap:.35rem; padding:.15rem .3rem; border-radius:5px; }
 .squad-right .sq-row { flex-direction:row-reverse; }
 .sq-row.sq-me { background:var(--accent-soft); }
 .sq-name { font-size:.74rem; font-weight:600; color:var(--text2); }
