@@ -250,7 +250,7 @@ const firebaseConfig = {
         statusHtml = `<div class="result-badge" style="color:${TEAM_META[win]?.color||'#fff'}">✅ ${win} won</div>`;
         if(myBet){
           const won = myBet.team === win;
-          statusHtml += `<div class="my-bet-result ${won?'bet-won':'bet-lost'}">${won?'🤑 You won':'😔 You lost'} ${formatINR(myBet.amount)}</div>`;
+          statusHtml += `<div class="my-bet-result ${won?'bet-won':'bet-lost'}">${won?'🤑 Won':'😔 Lost'} · Staked ${formatINR(myBet.amount)} · <span style="font-size:.75rem;opacity:.7">See Account for P&amp;L</span></div>`;
         }
       } else if(myBet){
         statusHtml = `<div class="my-bet-pill" style="border-color:${TEAM_META[myBet.team]?.color||'#fff'}">🎯 Bet: ${myBet.team} — ${formatINR(myBet.amount)}</div>`;
@@ -351,15 +351,14 @@ const firebaseConfig = {
           }
           profit += payout; wins++;
         } else {
-          // Count how many others won on this match
-          let lost = 0;
+          // LOSS: pay your bet amount to EACH person who bet on the winning side
+          let winnersCount = 0;
           for(const [ouid, obets] of Object.entries(allBets)){
             if(ouid === uid) continue;
             const ob = obets[mid];
-            if(ob && ob.team === results[mid]?.winner) lost += bet.amount/
-              Object.values(allBets).filter(b=>b[mid]&&b[mid].team===results[mid].winner).length || 1;
+            if(ob && ob.team === res.winner) winnersCount++;
           }
-          profit -= bet.amount; losses++;
+          profit -= bet.amount * Math.max(1, winnersCount); losses++;
         }
       }
       const winRate = (wins+losses)>0 ? Math.round(wins/(wins+losses)*100) : 0;
@@ -418,7 +417,15 @@ const firebaseConfig = {
           }
           pnl = payout; profit+=pnl; wins++; status="won";
         } else {
-          pnl = -bet.amount; profit+=pnl; losses++; status="lost";
+          // LOSS: pay your bet amount to EACH person who bet on the winning side
+          let winnersCount = 0;
+          for(const [ouid, obets] of Object.entries(allBets)){
+            if(ouid === currentUid) continue;
+            const ob = obets[mid];
+            if(ob && ob.team === res.winner) winnersCount++;
+          }
+          pnl = -bet.amount * Math.max(1, winnersCount);
+          profit += pnl; losses++; status="lost";
         }
       }
       betRows.push({match, bet, pnl, status});
