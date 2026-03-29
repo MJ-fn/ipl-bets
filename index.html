@@ -224,24 +224,17 @@ const firebaseConfig = {
   // ══════════════════════════════════════════════
   //  MATCHES PAGE
   // ══════════════════════════════════════════════
-  async function renderMatches(main, activeTab="upcoming"){
-    main.innerHTML = `<div class="page-header"><span class="page-title">📅 Matches</span></div><div id="matches-shell"></div>`;
-    const [betsSnap, resultsSnap, allBetsSnap, usersSnap] = await Promise.all([
+  async function renderMatches(main){
+    main.innerHTML = `<div class="page-header"><span class="page-title">📅 Matches</span></div><div id="match-list" class="match-list"></div>`;
+    const [betsSnap, resultsSnap] = await Promise.all([
       get(dbRef(`bets/${currentUid}`)),
-      get(dbRef("results")),
-      get(dbRef("bets")),
-      get(dbRef("users"))
+      get(dbRef("results"))
     ]);
-    const myBets  = betsSnap.exists()    ? betsSnap.val()    : {};
-    const results = resultsSnap.exists() ? resultsSnap.val() : {};
-    const allBets = allBetsSnap.exists() ? allBetsSnap.val() : {};
-    const users   = usersSnap.exists()   ? usersSnap.val()   : {};
+    const myBets   = betsSnap.exists()    ? betsSnap.val()    : {};
+    const results  = resultsSnap.exists() ? resultsSnap.val() : {};
+    const ml = $("match-list");
 
-    // Split matches into upcoming vs completed (result declared)
-    const upcomingMatches  = MATCHES.filter(m => !results[m.id]);
-    const completedMatches = MATCHES.filter(m =>  results[m.id]);
-
-    function buildCard(m){
+    for(const m of MATCHES){
       const result = results[m.id];
       const myBet  = myBets[m.id];
       const [mHour] = m.time.split(":").map(Number);
@@ -254,56 +247,17 @@ const firebaseConfig = {
       let statusHtml = "";
       if(result){
         const win = result.winner;
-        statusHtml = `<div class="result-badge" style="color:${TEAM_META[win]?.color||'#aaa'}">✅ ${win} won</div>`;
+        statusHtml = `<div class="result-badge" style="color:${TEAM_META[win]?.color||'#fff'}">✅ ${win} won</div>`;
         if(myBet){
           const won = myBet.team === win;
-          statusHtml += `<div class="my-bet-result ${won?'bet-won':'bet-lost'}">${won?'🤑 You won':'😔 You lost'} · Staked ${formatINR(myBet.amount)}</div>`;
+          statusHtml += `<div class="my-bet-result ${won?'bet-won':'bet-lost'}">${won?'🤑 Won':'😔 Lost'} · Staked ${formatINR(myBet.amount)} · <span style="font-size:.75rem;opacity:.7">See Account for P&amp;L</span></div>`;
         }
       } else if(myBet){
-        statusHtml = `<div class="my-bet-pill" style="border-color:${TEAM_META[myBet.team]?.color||'#aaa'}">🎯 Bet: ${myBet.team} — ${formatINR(myBet.amount)}</div>`;
+        statusHtml = `<div class="my-bet-pill" style="border-color:${TEAM_META[myBet.team]?.color||'#fff'}">🎯 Bet: ${myBet.team} — ${formatINR(myBet.amount)}</div>`;
       }
 
       const canBet    = !isPast && !result && !myBet;
       const canChange = !isPast && !result && !!myBet;
-
-      // Squad bets panel — visible after cutoff for ALL users (not just those who bet)
-      let squadHtml = "";
-      if(isPast){
-        const t1bets = [], t2bets = [];
-        for(const [uid, ubets] of Object.entries(allBets)){
-          const b = ubets[m.id];
-          if(!b) continue;
-          const uname = users[uid]?.name || users[uid]?.email?.split("@")[0] || "?";
-          const isMe = uid === currentUid;
-          const entry = { name: uname, amount: b.amount, isMe };
-          if(b.team === m.team1) t1bets.push(entry);
-          else t2bets.push(entry);
-        }
-        // Only show if at least one person bet
-        if(t1bets.length || t2bets.length){
-          const renderSide = (bets, color) => bets.length
-            ? bets.map(b => `<div class="squad-row${b.isMe?' squad-me':''}">
-                <span class="squad-name">${b.isMe?'You':b.name}</span>
-                <span class="squad-amt" style="color:${color}">${formatINR(b.amount)}</span>
-              </div>`).join("")
-            : `<div class="squad-empty">No bets</div>`;
-          squadHtml = `
-          <div class="squad-bets">
-            <div class="squad-header">Who bet what</div>
-            <div class="squad-cols">
-              <div class="squad-col">
-                <div class="squad-team" style="color:${meta1.color}">${m.team1}</div>
-                ${renderSide(t1bets, meta1.color)}
-              </div>
-              <div class="squad-divider"></div>
-              <div class="squad-col squad-col-right">
-                <div class="squad-team" style="color:${meta2.color}">${m.team2}</div>
-                ${renderSide(t2bets, meta2.color)}
-              </div>
-            </div>
-          </div>`;
-        }
-      }
 
       card.innerHTML = `
         <div class="match-meta">${fmtDate(m.date)} · ${m.time} IST · ${m.venue}</div>
@@ -313,7 +267,6 @@ const firebaseConfig = {
           <span class="team-badge" style="color:${meta2.color}">${m.team2}</span>
         </div>
         ${statusHtml}
-        ${squadHtml}
         ${(canBet || canChange) ? `
         <div class="bet-form" id="bf-${m.id}">
           <div class="bet-team-choice">
@@ -326,51 +279,11 @@ const firebaseConfig = {
           </div>
         </div>` : ""}
       `;
+      ml.appendChild(card);
+      // Pre-select existing bet team so the button is ready to change
       if(canChange){ selectedTeams[m.id] = myBet.team; }
-      return card;
-    }
-
-    const shell = $("matches-shell");
-    const upCount   = upcomingMatches.length;
-    const doneCount = completedMatches.length;
-
-    shell.innerHTML = `
-      <div class="match-tabs">
-        <button class="match-tab ${activeTab==='upcoming'?'active':''}" onclick="switchMatchTab('upcoming')">
-          Upcoming <span class="match-tab-count">${upCount}</span>
-        </button>
-        <button class="match-tab ${activeTab==='completed'?'active':''}" onclick="switchMatchTab('completed')">
-          Completed <span class="match-tab-count">${doneCount}</span>
-        </button>
-      </div>
-      <div id="tab-upcoming" class="match-list" style="display:${activeTab==='upcoming'?'flex':'none'}"></div>
-      <div id="tab-completed" class="match-list" style="display:${activeTab==='completed'?'flex':'none'}"></div>
-    `;
-
-    const upEl   = $("tab-upcoming");
-    const doneEl = $("tab-completed");
-
-    if(upcomingMatches.length){
-      upcomingMatches.forEach(m => upEl.appendChild(buildCard(m)));
-    } else {
-      upEl.innerHTML = `<div class="empty-state">No upcoming matches 🏆</div>`;
-    }
-
-    if(completedMatches.length){
-      // Show most recent first
-      [...completedMatches].reverse().forEach(m => doneEl.appendChild(buildCard(m)));
-    } else {
-      doneEl.innerHTML = `<div class="empty-state">No completed matches yet</div>`;
     }
   }
-
-  window.switchMatchTab = function(tab){
-    $("tab-upcoming").style.display  = tab==="upcoming"  ? "flex":"none";
-    $("tab-completed").style.display = tab==="completed" ? "flex":"none";
-    document.querySelectorAll(".match-tab").forEach(b=>{
-      b.classList.toggle("active", b.textContent.trim().toLowerCase().startsWith(tab));
-    });
-  };
 
   let selectedTeams = {}; // matchId → team
   window.selectBetTeam = function(mid, team, other){
@@ -438,15 +351,14 @@ const firebaseConfig = {
           }
           profit += payout; wins++;
         } else {
-          // Count how many others won on this match
-          let lost = 0;
+          // LOSS: pay your bet amount to EACH person who bet on the winning side
+          let winnersCount = 0;
           for(const [ouid, obets] of Object.entries(allBets)){
             if(ouid === uid) continue;
             const ob = obets[mid];
-            if(ob && ob.team === results[mid]?.winner) lost += bet.amount/
-              Object.values(allBets).filter(b=>b[mid]&&b[mid].team===results[mid].winner).length || 1;
+            if(ob && ob.team === res.winner) winnersCount++;
           }
-          profit -= bet.amount; losses++;
+          profit -= bet.amount * Math.max(1, winnersCount); losses++;
         }
       }
       const winRate = (wins+losses)>0 ? Math.round(wins/(wins+losses)*100) : 0;
@@ -505,7 +417,15 @@ const firebaseConfig = {
           }
           pnl = payout; profit+=pnl; wins++; status="won";
         } else {
-          pnl = -bet.amount; profit+=pnl; losses++; status="lost";
+          // LOSS: pay your bet amount to EACH person who bet on the winning side
+          let winnersCount = 0;
+          for(const [ouid, obets] of Object.entries(allBets)){
+            if(ouid === currentUid) continue;
+            const ob = obets[mid];
+            if(ob && ob.team === res.winner) winnersCount++;
+          }
+          pnl = -bet.amount * Math.max(1, winnersCount);
+          profit += pnl; losses++; status="lost";
         }
       }
       betRows.push({match, bet, pnl, status});
@@ -946,57 +866,6 @@ nav {
   font-size:.78rem; font-weight:700; background:var(--green-soft); color:var(--green);
   padding:.2rem .55rem; border-radius:8px; margin-left:auto; white-space:nowrap;
 }
-
-/* ── MATCH TABS ── */
-.match-tabs {
-  display: flex; gap: .4rem; margin-bottom: .85rem;
-  background: var(--bg); border-radius: 10px; padding: .3rem;
-}
-.match-tab {
-  flex: 1; padding: .48rem; border: none; background: transparent;
-  color: var(--muted); border-radius: 8px; cursor: pointer;
-  font-family: var(--font-body); font-size: .85rem; font-weight: 700;
-  transition: all .2s; display: flex; align-items: center;
-  justify-content: center; gap: .4rem;
-}
-.match-tab.active {
-  background: var(--surface); color: var(--text);
-  box-shadow: 0 1px 6px rgba(0,0,0,.15);
-}
-.match-tab-count {
-  background: var(--border); color: var(--text2); font-size: .68rem;
-  padding: .1rem .38rem; border-radius: 7px; font-weight: 700;
-}
-.match-tab.active .match-tab-count {
-  background: var(--accent-soft); color: var(--accent);
-}
-
-/* ── SQUAD BETS PANEL ── */
-.squad-bets {
-  margin-top: .65rem; border-top: 1px solid var(--border); padding-top: .6rem;
-}
-.squad-header {
-  font-size: .65rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .8px; color: var(--muted); margin-bottom: .45rem;
-}
-.squad-cols { display: flex; align-items: flex-start; }
-.squad-col { flex: 1; display: flex; flex-direction: column; gap: .25rem; }
-.squad-col-right { align-items: flex-end; }
-.squad-team {
-  font-family: var(--font-display); font-size: .88rem; font-weight: 700;
-  margin-bottom: .2rem; letter-spacing: -.3px;
-}
-.squad-row {
-  display: flex; align-items: center; gap: .4rem;
-  padding: .18rem .35rem; border-radius: 6px;
-}
-.squad-col-right .squad-row { flex-direction: row-reverse; }
-.squad-row.squad-me { background: var(--accent-soft); }
-.squad-name { font-size: .76rem; font-weight: 600; color: var(--text2); }
-.squad-row.squad-me .squad-name { color: var(--accent); font-weight: 700; }
-.squad-amt { font-size: .76rem; font-weight: 700; }
-.squad-divider { width: 1px; background: var(--border); margin: 0 .55rem; align-self: stretch; min-height: 2rem; }
-.squad-empty { font-size: .75rem; color: var(--muted); padding: .18rem .35rem; }
 
 @media(max-width:480px){
   .account-stats { grid-template-columns:1fr 1fr; }
