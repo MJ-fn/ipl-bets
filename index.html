@@ -245,7 +245,7 @@ const firebaseConfig = {
       const result = results[m.id];
       const myBet  = myBets[m.id];
       const [mHour] = m.time.split(":").map(Number);
-      const betCutoff = new Date(`${m.date}T${mHour.toString().padStart(2,"0")}:45:00`);
+      const betCutoff = new Date(`${m.date}T${mHour.toString().padStart(2,"0")}:30:00`);
       const isPast = betCutoff <= new Date();
 
       const card = document.createElement("div");
@@ -372,7 +372,7 @@ const firebaseConfig = {
     // Bets close at HH:45 on match day (15 min before start)
     const match = MATCHES.find(m=>m.id===mid);
     const [mHour] = match.time.split(":").map(Number);
-    const cutoff = new Date(`${match.date}T${mHour.toString().padStart(2,"0")}:45:00`);
+    const cutoff = new Date(`${match.date}T${mHour.toString().padStart(2,"0")}:30:00`);
     if(new Date() >= cutoff){
       toast("Bets closed for this match!", "error"); return;
     }
