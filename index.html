@@ -26,82 +26,78 @@ const firebaseConfig = {
   const ADMIN_EMAIL     = "digvijaymane23@gmail.com";   // ← change this
   const REGISTER_CODE   = "ipl2026";               // ← registration passcode
 
-  // ── IPL 2026 MATCHES (first 20 confirmed + representative later matches) ──
+  // ── IPL 2026 MATCHES — official schedule from iplt20.com ──
   const MATCHES = [
-    {id:"m01", date:"2026-03-28", time:"19:30", team1:"RCB", team2:"SRH", venue:"Bengaluru"},
-    {id:"m02", date:"2026-03-29", time:"19:30", team1:"MI",  team2:"KKR", venue:"Wankhede"},
-    {id:"m03", date:"2026-03-30", time:"19:30", team1:"RR",  team2:"CSK", venue:"Guwahati"},
-    {id:"m04", date:"2026-03-31", time:"19:30", team1:"PBKS",team2:"GT",  venue:"New Chandigarh"},
-    {id:"m05", date:"2026-04-01", time:"19:30", team1:"LSG", team2:"DC",  venue:"Lucknow"},
-    {id:"m06", date:"2026-04-02", time:"19:30", team1:"KKR", team2:"SRH", venue:"Kolkata"},
-    {id:"m07", date:"2026-04-03", time:"19:30", team1:"CSK", team2:"PBKS",venue:"Chennai"},
-    {id:"m08", date:"2026-04-04", time:"19:30", team1:"DC",  team2:"MI",  venue:"Delhi"},
-    {id:"m09", date:"2026-04-05", time:"15:30", team1:"GT",  team2:"RR",  venue:"Ahmedabad"},
-    {id:"m10", date:"2026-04-05", time:"19:30", team1:"SRH", team2:"LSG", venue:"Hyderabad"},
-    {id:"m11", date:"2026-04-06", time:"15:30", team1:"RCB", team2:"CSK", venue:"Bengaluru"},
-    {id:"m12", date:"2026-04-06", time:"19:30", team1:"KKR", team2:"PBKS",venue:"Kolkata"},
-    {id:"m13", date:"2026-04-07", time:"19:30", team1:"RR",  team2:"MI",  venue:"Jaipur"},
-    {id:"m14", date:"2026-04-08", time:"19:30", team1:"DC",  team2:"GT",  venue:"Delhi"},
-    {id:"m15", date:"2026-04-09", time:"19:30", team1:"KKR", team2:"LSG", venue:"Kolkata"},
-    {id:"m16", date:"2026-04-10", time:"19:30", team1:"RR",  team2:"RCB", venue:"Jaipur"},
-    {id:"m17", date:"2026-04-11", time:"19:30", team1:"PBKS",team2:"SRH", venue:"Dharamshala"},
-    {id:"m18", date:"2026-04-12", time:"15:30", team1:"CSK", team2:"DC",  venue:"Chennai"},
-    {id:"m19", date:"2026-04-12", time:"19:30", team1:"LSG", team2:"GT",  venue:"Lucknow"},
-    {id:"m20", date:"2026-04-13", time:"15:30", team1:"MI",  team2:"RCB", venue:"Wankhede"},
-    {id:"m21", date:"2026-04-13", time:"19:30", team1:"SRH", team2:"RR",  venue:"Hyderabad"},
-    {id:"m22", date:"2026-04-14", time:"19:30", team1:"CSK", team2:"KKR", venue:"Chennai"},
-    {id:"m23", date:"2026-04-15", time:"19:30", team1:"RCB", team2:"LSG", venue:"Bengaluru"},
-    {id:"m24", date:"2026-04-16", time:"19:30", team1:"MI",  team2:"PBKS",venue:"Wankhede"},
-    {id:"m25", date:"2026-04-17", time:"19:30", team1:"GT",  team2:"KKR", venue:"Ahmedabad"},
-    {id:"m26", date:"2026-04-18", time:"19:30", team1:"RCB", team2:"DC",  venue:"Bengaluru"},
-    {id:"m27", date:"2026-04-19", time:"15:30", team1:"SRH", team2:"CSK", venue:"Hyderabad"},
-    {id:"m28", date:"2026-04-19", time:"19:30", team1:"KKR", team2:"RR",  venue:"Kolkata"},
-    {id:"m29", date:"2026-04-20", time:"15:30", team1:"PBKS",team2:"LSG", venue:"Dharamshala"},
-    {id:"m30", date:"2026-04-20", time:"19:30", team1:"GT",  team2:"MI",  venue:"Ahmedabad"},
-    {id:"m31", date:"2026-04-21", time:"19:30", team1:"SRH", team2:"DC",  venue:"Hyderabad"},
-    {id:"m32", date:"2026-04-22", time:"19:30", team1:"LSG", team2:"RR",  venue:"Lucknow"},
-    {id:"m33", date:"2026-04-23", time:"19:30", team1:"MI",  team2:"CSK", venue:"Wankhede"},
-    {id:"m34", date:"2026-04-24", time:"19:30", team1:"RCB", team2:"GT",  venue:"Bengaluru"},
-    {id:"m35", date:"2026-04-25", time:"19:30", team1:"DC",  team2:"PBKS",venue:"Delhi"},
-    {id:"m36", date:"2026-04-26", time:"15:30", team1:"RR",  team2:"SRH", venue:"Jaipur"},
-    {id:"m37", date:"2026-04-26", time:"19:30", team1:"GT",  team2:"CSK", venue:"Ahmedabad"},
-    {id:"m38", date:"2026-04-27", time:"15:30", team1:"LSG", team2:"KKR", venue:"Lucknow"},
-    {id:"m39", date:"2026-04-27", time:"19:30", team1:"DC",  team2:"RCB", venue:"Delhi"},
-    {id:"m40", date:"2026-04-28", time:"19:30", team1:"PBKS",team2:"RR",  venue:"New Chandigarh"},
-    {id:"m41", date:"2026-04-29", time:"19:30", team1:"MI",  team2:"SRH", venue:"Wankhede"},
-    {id:"m42", date:"2026-04-30", time:"19:30", team1:"GT",  team2:"RCB", venue:"Ahmedabad"},
-    {id:"m43", date:"2026-05-01", time:"19:30", team1:"RR",  team2:"DC",  venue:"Jaipur"},
-    {id:"m44", date:"2026-05-02", time:"19:30", team1:"CSK", team2:"LSG", venue:"Chennai"},
-    {id:"m45", date:"2026-05-03", time:"15:30", team1:"KKR", team2:"MI",  venue:"Kolkata"},
-    {id:"m46", date:"2026-05-03", time:"19:30", team1:"PBKS",team2:"DC",  venue:"Dharamshala"},
-    {id:"m47", date:"2026-05-04", time:"15:30", team1:"SRH", team2:"GT",  venue:"Hyderabad"},
-    {id:"m48", date:"2026-05-04", time:"19:30", team1:"RCB", team2:"RR",  venue:"Bengaluru"},
-    {id:"m49", date:"2026-05-05", time:"19:30", team1:"CSK", team2:"MI",  venue:"Chennai"},
-    {id:"m50", date:"2026-05-06", time:"19:30", team1:"DC",  team2:"KKR", venue:"Delhi"},
-    {id:"m51", date:"2026-05-07", time:"19:30", team1:"LSG", team2:"PBKS",venue:"Lucknow"},
-    {id:"m52", date:"2026-05-08", time:"19:30", team1:"GT",  team2:"SRH", venue:"Ahmedabad"},
-    {id:"m53", date:"2026-05-09", time:"15:30", team1:"MI",  team2:"RR",  venue:"Wankhede"},
-    {id:"m54", date:"2026-05-09", time:"19:30", team1:"KKR", team2:"CSK", venue:"Kolkata"},
-    {id:"m55", date:"2026-05-10", time:"15:30", team1:"RCB", team2:"PBKS",venue:"Bengaluru"},
-    {id:"m56", date:"2026-05-10", time:"19:30", team1:"DC",  team2:"LSG", venue:"Delhi"},
-    {id:"m57", date:"2026-05-11", time:"19:30", team1:"SRH", team2:"MI",  venue:"Hyderabad"},
-    {id:"m58", date:"2026-05-12", time:"19:30", team1:"GT",  team2:"DC",  venue:"Ahmedabad"},
-    {id:"m59", date:"2026-05-13", time:"19:30", team1:"RR",  team2:"KKR", venue:"Jaipur"},
-    {id:"m60", date:"2026-05-14", time:"19:30", team1:"PBKS",team2:"CSK", venue:"New Chandigarh"},
-    {id:"m61", date:"2026-05-15", time:"19:30", team1:"LSG", team2:"MI",  venue:"Lucknow"},
-    {id:"m62", date:"2026-05-16", time:"15:30", team1:"DC",  team2:"SRH", venue:"Delhi"},
-    {id:"m63", date:"2026-05-16", time:"19:30", team1:"KKR", team2:"GT",  venue:"Kolkata"},
-    {id:"m64", date:"2026-05-17", time:"15:30", team1:"CSK", team2:"RR",  venue:"Chennai"},
-    {id:"m65", date:"2026-05-17", time:"19:30", team1:"MI",  team2:"LSG", venue:"Wankhede"},
-    {id:"m66", date:"2026-05-18", time:"19:30", team1:"PBKS",team2:"KKR", venue:"Dharamshala"},
-    {id:"m67", date:"2026-05-19", time:"19:30", team1:"GT",  team2:"RR",  venue:"Ahmedabad"},
-    {id:"m68", date:"2026-05-20", time:"19:30", team1:"SRH", team2:"PBKS",venue:"Hyderabad"},
-    {id:"m69", date:"2026-05-21", time:"19:30", team1:"RCB", team2:"KKR", venue:"Bengaluru"},
-    {id:"m70", date:"2026-05-22", time:"19:30", team1:"DC",  team2:"CSK", venue:"Delhi"},
-    {id:"m71", date:"2026-05-23", time:"15:30", team1:"LSG", team2:"SRH", venue:"Lucknow"},
-    {id:"m72", date:"2026-05-23", time:"19:30", team1:"MI",  team2:"GT",  venue:"Wankhede"},
-    {id:"m73", date:"2026-05-24", time:"15:30", team1:"RR",  team2:"PBKS",venue:"Jaipur"},
-    {id:"m74", date:"2026-05-24", time:"19:30", team1:"KKR", team2:"DC",  venue:"Kolkata"},
+    {id:"m01", date:"2026-03-28", time:"19:30", team1:"RCB",  team2:"SRH",  venue:"Bengaluru"},
+    {id:"m02", date:"2026-03-29", time:"19:30", team1:"MI",   team2:"KKR",  venue:"Wankhede"},
+    {id:"m03", date:"2026-03-30", time:"19:30", team1:"RR",   team2:"CSK",  venue:"Guwahati"},
+    {id:"m04", date:"2026-03-31", time:"19:30", team1:"PBKS", team2:"GT",   venue:"New Chandigarh"},
+    {id:"m05", date:"2026-04-01", time:"19:30", team1:"LSG",  team2:"DC",   venue:"Lucknow"},
+    {id:"m06", date:"2026-04-02", time:"19:30", team1:"KKR",  team2:"SRH",  venue:"Kolkata"},
+    {id:"m07", date:"2026-04-03", time:"19:30", team1:"CSK",  team2:"PBKS", venue:"Chennai"},
+    {id:"m08", date:"2026-04-04", time:"15:30", team1:"DC",   team2:"MI",   venue:"Delhi"},
+    {id:"m09", date:"2026-04-04", time:"19:30", team1:"GT",   team2:"RR",   venue:"Ahmedabad"},
+    {id:"m10", date:"2026-04-05", time:"15:30", team1:"SRH",  team2:"LSG",  venue:"Hyderabad"},
+    {id:"m11", date:"2026-04-05", time:"19:30", team1:"RCB",  team2:"CSK",  venue:"Bengaluru"},
+    {id:"m12", date:"2026-04-06", time:"19:30", team1:"KKR",  team2:"PBKS", venue:"Kolkata"},
+    {id:"m13", date:"2026-04-07", time:"19:30", team1:"RR",   team2:"MI",   venue:"Guwahati"},
+    {id:"m14", date:"2026-04-08", time:"19:30", team1:"DC",   team2:"GT",   venue:"Delhi"},
+    {id:"m15", date:"2026-04-09", time:"19:30", team1:"KKR",  team2:"LSG",  venue:"Kolkata"},
+    {id:"m16", date:"2026-04-10", time:"19:30", team1:"RR",   team2:"RCB",  venue:"Guwahati"},
+    {id:"m17", date:"2026-04-11", time:"15:30", team1:"PBKS", team2:"SRH",  venue:"New Chandigarh"},
+    {id:"m18", date:"2026-04-11", time:"19:30", team1:"CSK",  team2:"DC",   venue:"Chennai"},
+    {id:"m19", date:"2026-04-12", time:"15:30", team1:"LSG",  team2:"GT",   venue:"Lucknow"},
+    {id:"m20", date:"2026-04-12", time:"19:30", team1:"MI",   team2:"RCB",  venue:"Wankhede"},
+    {id:"m21", date:"2026-04-13", time:"19:30", team1:"SRH",  team2:"RR",   venue:"Hyderabad"},
+    {id:"m22", date:"2026-04-14", time:"19:30", team1:"CSK",  team2:"KKR",  venue:"Chennai"},
+    {id:"m23", date:"2026-04-15", time:"19:30", team1:"RCB",  team2:"LSG",  venue:"Bengaluru"},
+    {id:"m24", date:"2026-04-16", time:"19:30", team1:"MI",   team2:"PBKS", venue:"Wankhede"},
+    {id:"m25", date:"2026-04-17", time:"19:30", team1:"GT",   team2:"KKR",  venue:"Ahmedabad"},
+    {id:"m26", date:"2026-04-18", time:"15:30", team1:"RCB",  team2:"DC",   venue:"Bengaluru"},
+    {id:"m27", date:"2026-04-18", time:"19:30", team1:"SRH",  team2:"CSK",  venue:"Hyderabad"},
+    {id:"m28", date:"2026-04-19", time:"15:30", team1:"KKR",  team2:"RR",   venue:"Kolkata"},
+    {id:"m29", date:"2026-04-19", time:"19:30", team1:"PBKS", team2:"LSG",  venue:"New Chandigarh"},
+    {id:"m30", date:"2026-04-20", time:"19:30", team1:"GT",   team2:"MI",   venue:"Ahmedabad"},
+    {id:"m31", date:"2026-04-21", time:"19:30", team1:"SRH",  team2:"DC",   venue:"Hyderabad"},
+    {id:"m32", date:"2026-04-22", time:"19:30", team1:"LSG",  team2:"RR",   venue:"Lucknow"},
+    {id:"m33", date:"2026-04-23", time:"19:30", team1:"MI",   team2:"CSK",  venue:"Wankhede"},
+    {id:"m34", date:"2026-04-24", time:"19:30", team1:"RCB",  team2:"GT",   venue:"Bengaluru"},
+    {id:"m35", date:"2026-04-25", time:"15:30", team1:"DC",   team2:"PBKS", venue:"Delhi"},
+    {id:"m36", date:"2026-04-25", time:"19:30", team1:"RR",   team2:"SRH",  venue:"Jaipur"},
+    {id:"m37", date:"2026-04-26", time:"15:30", team1:"GT",   team2:"CSK",  venue:"Ahmedabad"},
+    {id:"m38", date:"2026-04-26", time:"19:30", team1:"LSG",  team2:"KKR",  venue:"Lucknow"},
+    {id:"m39", date:"2026-04-27", time:"19:30", team1:"DC",   team2:"RCB",  venue:"Delhi"},
+    {id:"m40", date:"2026-04-28", time:"19:30", team1:"PBKS", team2:"RR",   venue:"New Chandigarh"},
+    {id:"m41", date:"2026-04-29", time:"19:30", team1:"MI",   team2:"SRH",  venue:"Wankhede"},
+    {id:"m42", date:"2026-04-30", time:"19:30", team1:"GT",   team2:"RCB",  venue:"Ahmedabad"},
+    {id:"m43", date:"2026-05-01", time:"19:30", team1:"RR",   team2:"DC",   venue:"Jaipur"},
+    {id:"m44", date:"2026-05-02", time:"19:30", team1:"CSK",  team2:"MI",   venue:"Chennai"},
+    {id:"m45", date:"2026-05-03", time:"15:30", team1:"SRH",  team2:"KKR",  venue:"Hyderabad"},
+    {id:"m46", date:"2026-05-03", time:"19:30", team1:"GT",   team2:"PBKS", venue:"Ahmedabad"},
+    {id:"m47", date:"2026-05-04", time:"19:30", team1:"MI",   team2:"LSG",  venue:"Wankhede"},
+    {id:"m48", date:"2026-05-05", time:"19:30", team1:"DC",   team2:"CSK",  venue:"Delhi"},
+    {id:"m49", date:"2026-05-06", time:"19:30", team1:"SRH",  team2:"PBKS", venue:"Hyderabad"},
+    {id:"m50", date:"2026-05-07", time:"19:30", team1:"LSG",  team2:"RCB",  venue:"Lucknow"},
+    {id:"m51", date:"2026-05-08", time:"19:30", team1:"DC",   team2:"KKR",  venue:"Delhi"},
+    {id:"m52", date:"2026-05-09", time:"19:30", team1:"RR",   team2:"GT",   venue:"Jaipur"},
+    {id:"m53", date:"2026-05-10", time:"15:30", team1:"CSK",  team2:"LSG",  venue:"Chennai"},
+    {id:"m54", date:"2026-05-10", time:"19:30", team1:"RCB",  team2:"MI",   venue:"Raipur"},
+    {id:"m55", date:"2026-05-11", time:"19:30", team1:"PBKS", team2:"DC",   venue:"Dharamshala"},
+    {id:"m56", date:"2026-05-12", time:"19:30", team1:"GT",   team2:"SRH",  venue:"Ahmedabad"},
+    {id:"m57", date:"2026-05-13", time:"19:30", team1:"RCB",  team2:"KKR",  venue:"Raipur"},
+    {id:"m58", date:"2026-05-14", time:"19:30", team1:"PBKS", team2:"MI",   venue:"Dharamshala"},
+    {id:"m59", date:"2026-05-15", time:"19:30", team1:"LSG",  team2:"CSK",  venue:"Lucknow"},
+    {id:"m60", date:"2026-05-16", time:"19:30", team1:"KKR",  team2:"GT",   venue:"Kolkata"},
+    {id:"m61", date:"2026-05-17", time:"15:30", team1:"PBKS", team2:"RCB",  venue:"Dharamshala"},
+    {id:"m62", date:"2026-05-17", time:"19:30", team1:"DC",   team2:"RR",   venue:"Delhi"},
+    {id:"m63", date:"2026-05-18", time:"19:30", team1:"CSK",  team2:"SRH",  venue:"Chennai"},
+    {id:"m64", date:"2026-05-19", time:"19:30", team1:"RR",   team2:"LSG",  venue:"Jaipur"},
+    {id:"m65", date:"2026-05-20", time:"19:30", team1:"KKR",  team2:"MI",   venue:"Kolkata"},
+    {id:"m66", date:"2026-05-21", time:"19:30", team1:"CSK",  team2:"GT",   venue:"Chennai"},
+    {id:"m67", date:"2026-05-22", time:"19:30", team1:"SRH",  team2:"RCB",  venue:"Hyderabad"},
+    {id:"m68", date:"2026-05-23", time:"19:30", team1:"LSG",  team2:"PBKS", venue:"Lucknow"},
+    {id:"m69", date:"2026-05-24", time:"15:30", team1:"MI",   team2:"RR",   venue:"Wankhede"},
+    {id:"m70", date:"2026-05-24", time:"19:30", team1:"KKR",  team2:"DC",   venue:"Kolkata"},
   ];
 
   const TEAM_META = {
@@ -319,6 +315,7 @@ const firebaseConfig = {
             <input type="number" id="ba-${m.id}" placeholder="Amount (₹)" min="1" class="bet-input" value="${canChange ? myBet.amount : ''}"/>
             <button class="place-bet-btn ${canChange ? 'change-bet-btn' : ''}" onclick="placeBet('${m.id}','${m.team1}','${m.team2}')">${canChange ? 'Change Bet' : 'Place Bet'}</button>
           </div>
+          ${canChange ? `<button class="cancel-bet-btn" onclick="cancelBet('${m.id}')">Cancel Bet</button>` : ""}
         </div>` : ""}
       `;
       if(canChange){ selectedTeams[m.id] = myBet.team; }
@@ -381,6 +378,19 @@ const firebaseConfig = {
       const isChange = existingSnap.exists();
       await set(dbRef(`bets/${currentUid}/${mid}`), { team, amount, ts: Date.now() });
       toast(isChange ? `Bet updated: ${team} for ${formatINR(amount)} 🔄` : `Bet placed: ${team} for ${formatINR(amount)} 🏏`, "success");
+      renderMatches($("main-content"));
+    } catch(e){ toast(e.message, "error"); }
+  };
+
+  window.cancelBet = async function(mid){
+    if(!confirm("Cancel your bet on this match?")) return;
+    const match = MATCHES.find(m=>m.id===mid);
+    const [mHour] = match.time.split(":").map(Number);
+    const cutoff = new Date(`${match.date}T${mHour.toString().padStart(2,"0")}:30:00`);
+    if(new Date() >= cutoff){ toast("Bets closed for this match!", "error"); return; }
+    try {
+      await set(dbRef(`bets/${currentUid}/${mid}`), null);
+      toast("Bet cancelled.", "info");
       renderMatches($("main-content"));
     } catch(e){ toast(e.message, "error"); }
   };
@@ -830,6 +840,13 @@ nav {
   white-space:nowrap; font-size:.88rem; transition: background .2s;
 }
 .place-bet-btn:hover { background: #B8540A; }
+.cancel-bet-btn {
+  margin-top: .4rem; width:100%; padding:.45rem; background:transparent;
+  border:1.5px solid var(--border); border-radius:9px; color:var(--muted);
+  font-family:var(--font-body); font-size:.82rem; font-weight:700;
+  cursor:pointer; transition: all .18s;
+}
+.cancel-bet-btn:hover { border-color:var(--red); color:var(--red); }
 .change-bet-btn { background: #2A5A8A !important; }
 .change-bet-btn:hover { background: #1E4570 !important; }
 
