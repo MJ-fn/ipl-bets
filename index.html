@@ -398,20 +398,9 @@ const firebaseConfig = {
   // ══════════════════════════════════════════════
   //  LEADERBOARD PAGE
   // ══════════════════════════════════════════════
-  async function renderLeaderboard(main){
-    main.innerHTML = `<div class="page-header"><span class="page-title">🏆 Leaderboard</span></div><div class="lb-loading">Loading…</div>`;
 
-    const [usersSnap, betsSnap, resultsSnap] = await Promise.all([
-      get(dbRef("users")),
-      get(dbRef("bets")),
-      get(dbRef("results"))
-    ]);
-
-    const users   = usersSnap.exists()   ? usersSnap.val()   : {};
-    const allBets = betsSnap.exists()    ? betsSnap.val()    : {};
-    const results = resultsSnap.exists() ? resultsSnap.val() : {};
-
-    // Compute P&L for each user
+  // Compute P&L for a set of match IDs within a round range
+  function computeRows(users, allBets, results, fromMatch, toMatch){
     const HIDDEN_EMAILS = new Set(["digvijaymane23@gmail.com","mj.vgschool@gmail.com"]);
     const rows = [];
     for(const [uid, u] of Object.entries(users)){
@@ -419,10 +408,12 @@ const firebaseConfig = {
       let profit = 0, wins = 0, losses = 0, pending = 0;
       const myBets = allBets[uid] || {};
       for(const [mid, bet] of Object.entries(myBets)){
+        // Only count matches within this round's range
+        if(mid < fromMatch) continue;
+        if(toMatch && mid >= toMatch) continue;
         const res = results[mid];
         if(!res){ pending++; continue; }
         if(res.winner === bet.team){
-          // Count how many others lost on this match
           let payout = 0;
           for(const [ouid, obets] of Object.entries(allBets)){
             if(ouid === uid) continue;
@@ -431,7 +422,6 @@ const firebaseConfig = {
           }
           profit += payout; wins++;
         } else {
-          // LOSS: pay your bet amount to EACH person who bet on the winning side
           let winnersCount = 0;
           for(const [ouid, obets] of Object.entries(allBets)){
             if(ouid === uid) continue;
@@ -445,24 +435,82 @@ const firebaseConfig = {
       rows.push({ name: u.name||u.email, email: u.email, profit, wins, losses, winRate, pending });
     }
     rows.sort((a,b)=>b.profit-a.profit);
+    return rows;
+  }
 
-    let html = `<div class="page-header"><span class="page-title">🏆 Leaderboard</span></div>
-    <table class="lb-table">
+  function buildLbTable(rows, currentEmail){
+    let html = `<table class="lb-table">
       <thead><tr><th>#</th><th>Player</th><th>P&amp;L</th><th>Win %</th><th>W/L</th></tr></thead><tbody>`;
     rows.forEach((r,i)=>{
       const pos = i===0?"🥇":i===1?"🥈":i===2?"🥉":`${i+1}`;
       const plc = r.profit>0?"profit-pos":r.profit<0?"profit-neg":"";
-      html+=`<tr class="${r.email===currentUser.email?"my-row":""}">
+      html+=`<tr class="${r.email===currentEmail?"my-row":""}">
         <td>${pos}</td>
-        <td class="lb-name">${r.name}${r.email===currentUser.email?' <span class="you-tag">you</span>':''}</td>
+        <td class="lb-name">${r.name}${r.email===currentEmail?' <span class="you-tag">you</span>':''}</td>
         <td class="lb-pl ${plc}">${r.profit>=0?"+":""}${formatINR(r.profit)}</td>
         <td>${r.winRate}%</td>
         <td>${r.wins}W ${r.losses}L</td>
       </tr>`;
     });
     html += `</tbody></table>`;
-    main.innerHTML = html;
+    return html;
   }
+
+  async function renderLeaderboard(main, viewRound=null){
+    main.innerHTML = `<div class="page-header"><span class="page-title">🏆 Leaderboard</span></div><div class="lb-loading">Loading…</div>`;
+
+    const [usersSnap, betsSnap, resultsSnap, roundsSnap] = await Promise.all([
+      get(dbRef("users")),
+      get(dbRef("bets")),
+      get(dbRef("results")),
+      get(dbRef("rounds"))
+    ]);
+
+    const users   = usersSnap.exists()   ? usersSnap.val()   : {};
+    const allBets = betsSnap.exists()    ? betsSnap.val()    : {};
+    const results = resultsSnap.exists() ? resultsSnap.val() : {};
+
+    // Build rounds list: each round = {startMatch, label}
+    // rounds in Firebase: { r1: {startMatch:"m01", label:"Round 1"}, r2: ... }
+    const roundsRaw = roundsSnap.exists() ? roundsSnap.val() : {};
+    // Always ensure Round 1 starts from m01
+    const rounds = [{key:"r0", startMatch:"m01", label:"Round 1"}];
+    Object.entries(roundsRaw)
+      .sort((a,b)=>a[0].localeCompare(b[0]))
+      .forEach(([k,v],i)=>{ rounds.push({key:k, startMatch:v.startMatch, label:`Round ${i+2}`}); });
+
+    const currentRoundIdx = rounds.length - 1;
+    const displayIdx = (viewRound !== null) ? viewRound : currentRoundIdx;
+    const dispRound  = rounds[displayIdx];
+    const nextRound  = rounds[displayIdx + 1];
+    const fromMatch  = dispRound.startMatch;
+    const toMatch    = nextRound ? nextRound.startMatch : null;
+
+    const rows = computeRows(users, allBets, results, fromMatch, toMatch);
+
+    // Round selector
+    const selectorOpts = rounds.map((r,i)=>
+      `<option value="${i}" ${i===displayIdx?'selected':''}>${r.label}${i===currentRoundIdx?' (current)':''}</option>`
+    ).join('');
+    const selectorHtml = rounds.length > 1
+      ? `<div class="round-selector-wrap">
+           <select class="round-selector" onchange="loadPage('leaderboard'); renderLeaderboard($('main-content'), parseInt(this.value))">
+             ${selectorOpts}
+           </select>
+         </div>`
+      : '';
+
+    const tableHtml = buildLbTable(rows, currentUser.email);
+
+    main.innerHTML = `
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+        <span class="page-title">🏆 ${dispRound.label}</span>
+        ${selectorHtml}
+      </div>
+      ${tableHtml}`;
+  }
+
+  window.renderLeaderboard = renderLeaderboard;
 
   // ══════════════════════════════════════════════
   //  ACCOUNT PAGE
@@ -596,7 +644,10 @@ const firebaseConfig = {
     const resCount  = resolvedMatches.length;
 
     main.innerHTML = `
-    <div class="page-header"><span class="page-title">Admin Panel</span></div>
+    <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+      <span class="page-title">Admin Panel</span>
+      <button class="new-round-btn" onclick="startNewRound()">+ New Round</button>
+    </div>
     <div class="admin-tabs">
       <button class="admin-tab ${activeTab==='pending'?'active':''}" onclick="setAdminTab('pending')">Pending <span class="tab-count">${pendCount}</span></button>
       <button class="admin-tab ${activeTab==='resolved'?'active':''}" onclick="setAdminTab('resolved')">Resolved <span class="tab-count">${resCount}</span></button>
@@ -635,6 +686,24 @@ const firebaseConfig = {
     if(!confirm("Undo this result? All P&L from this match will be recalculated.")) return;
     await set(dbRef(`results/${mid}`), null);
     toast("Result undone.", "info");
+    renderAdmin($("main-content"));
+  };
+
+  // ── NEW ROUND ──
+  // Finds the next unresolved match and sets it as the start of a new round
+  window.startNewRound = async function(){
+    const resultsSnap = await get(dbRef("results"));
+    const results = resultsSnap.exists() ? resultsSnap.val() : {};
+    // Find the first match that has no result yet
+    const nextMatch = MATCHES.find(m => !results[m.id]);
+    if(!nextMatch){ toast("All matches resolved — nothing to start new round from.", "info"); return; }
+    const roundsSnap = await get(dbRef("rounds"));
+    const roundsRaw  = roundsSnap.exists() ? roundsSnap.val() : {};
+    const roundCount = Object.keys(roundsRaw).length;
+    const newKey = `r${roundCount + 1}`;
+    if(!confirm(`Start a new round from match ${nextMatch.id} (${nextMatch.team1} vs ${nextMatch.team2} on ${fmtDate(nextMatch.date)})?\n\nThe leaderboard will reset from this point. Old data is kept.`)) return;
+    await set(dbRef(`rounds/${newKey}`), { startMatch: nextMatch.id, createdAt: Date.now() });
+    toast(`New round started from ${nextMatch.team1} vs ${nextMatch.team2}!`, "success");
     renderAdmin($("main-content"));
   };
 
@@ -980,6 +1049,24 @@ nav {
 .sq-row.sq-me .sq-name { color:var(--accent); font-weight:700; }
 .sq-amt  { font-size:.74rem; font-weight:700; }
 .sq-empty { font-size:.73rem; color:var(--muted); padding:.15rem .3rem; }
+
+/* ── ROUND SYSTEM ── */
+.round-selector-wrap { display:flex; align-items:center; }
+.round-selector {
+  background: var(--surface); border: 1.5px solid var(--border);
+  color: var(--text); border-radius: 8px; padding: .3rem .6rem;
+  font-family: var(--font-body); font-size: .82rem; font-weight: 600;
+  cursor: pointer; outline: none;
+}
+.round-selector:focus { border-color: var(--accent); }
+.new-round-btn {
+  padding: .32rem .75rem; background: var(--accent-soft);
+  border: 1.5px solid var(--accent); border-radius: 8px;
+  color: var(--accent); font-family: var(--font-body);
+  font-size: .78rem; font-weight: 700; cursor: pointer;
+  transition: all .2s;
+}
+.new-round-btn:hover { background: var(--accent); color: #fff; }
 
 @media(max-width:480px){
   .account-stats { grid-template-columns:1fr 1fr; }
