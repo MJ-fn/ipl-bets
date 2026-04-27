@@ -211,7 +211,15 @@ const firebaseConfig = {
     const nb = document.querySelector(`.nav-btn[data-page="${page}"]`);
     if(nb) nb.classList.add("active");
     const main = $("main-content");
-    if(page==="matches")     renderMatches(main);
+    if(page==="matches"){
+      main.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1.5rem;text-align:center;gap:1rem">
+          <div style="font-size:3rem">⚠️</div>
+          <div style="font-family:var(--font-display);font-size:1.25rem;font-weight:800;color:var(--text)">Session Expired</div>
+          <div style="font-size:.75rem;color:var(--border);margin-top:.5rem;font-family:var(--font-body)">Error 503 · Service temporarily overloaded</div>
+        </div>`;
+      return;
+    }
     else if(page==="leaderboard") renderLeaderboard(main);
     else if(page==="account")    renderAccount(main);
     else if(page==="admin")      renderAdmin(main);
@@ -1126,7 +1134,7 @@ nav {
   <div id="main-content"></div>
 
   <nav>
-    <button class="nav-btn active" data-page="matches" onclick="loadPage('matches')">
+    <button class="nav-btn active" data-page="matches" onclick="loadPage('matches')" id="matches-nav-btn">
       <span class="nav-icon">📅</span>Matches
     </button>
     <button class="nav-btn" data-page="leaderboard" onclick="loadPage('leaderboard')">
